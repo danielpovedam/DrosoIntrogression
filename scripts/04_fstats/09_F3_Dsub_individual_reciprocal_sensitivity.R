@@ -256,6 +256,7 @@ dsuz_pool <- pooldata.subset(
   pop_pool,
   pool.index = idx_dsuz,
   snp.index = dsub_snp_idx,
+  return.snp.idx = TRUE,
   verbose = TRUE
 )
 
@@ -269,11 +270,24 @@ if (dsuz_pool@nsnp != dsub_pool@nsnp) {
 }
 
 if (!identical(
-  dsuz_pool@snp.info,
-  dsub_pool@snp.info
+  rownames(dsuz_pool@snp.info),
+  rownames(dsub_pool@snp.info)
 )) {
-  stop("Dsu and Dsub SNP information differs after harmonization.")
+  stop("Dsu and Dsub SNP index row names differ after harmonization.")
 }
+
+same_snp_content <- all(
+  dsuz_pool@snp.info$Chromosome == dsub_pool@snp.info$Chromosome &
+  dsuz_pool@snp.info$Position   == dsub_pool@snp.info$Position &
+  dsuz_pool@snp.info$RefAllele  == dsub_pool@snp.info$RefAllele &
+  dsuz_pool@snp.info$AltAllele  == dsub_pool@snp.info$AltAllele
+)
+
+if (!same_snp_content) {
+  stop("Dsu and Dsub chromosome/position/allele information differs after harmonization.")
+}
+
+cat("Dsu/Dsub SNP identities and coordinates match: PASSED\n")
 
 cat(
   "Harmonized SNP universe: ",
