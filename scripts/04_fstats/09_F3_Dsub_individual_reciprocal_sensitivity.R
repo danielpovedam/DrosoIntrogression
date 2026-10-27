@@ -65,6 +65,20 @@ if (pop_pool@nsnp != EXPECTED_NSNP) {
   )
 }
 
+# The sample- and population-level objects must originate from
+# exactly the same ordered SNP universe before any subsetting.
+if (!identical(
+  sample_pool@snp.info,
+  pop_pool@snp.info
+)) {
+  stop(
+    "Sample-level and population-level SNP information/order ",
+    "are not identical."
+  )
+}
+
+cat("Sample/population SNP universes are identical: PASSED\n\n")
+
 meta <- read.table(
   meta_file,
   header = TRUE,
@@ -196,7 +210,8 @@ if (anyNA(idx_dsub)) {
 
 dsub_pool <- pooldata.subset(
   sample_pool,
-  pool.index = idx_dsub
+  pool.index = idx_dsub,
+  return.snp.idx = TRUE
 )
 
 # Use individual sample IDs as analytical unit names.
@@ -205,6 +220,66 @@ dsub_pool@poolnames <- dsub_meta$SampleLabel
 if (anyDuplicated(dsub_pool@poolnames)) {
   stop("Duplicated Dsub individual analytical names.")
 }
+
+# pooldata.subset() removes SNPs with zero total coverage across
+# the selected pools. Therefore the 11 Dsub individuals may retain
+# fewer SNPs than the complete 8,004,305-SNP analytical universe.
+#
+# Because return.snp.idx=TRUE was used above, row names identify
+# each retained SNP by its index in the original sample-level
+# pooldata object. The population-level object has already been
+# verified to have exactly the same ordered SNP universe.
+dsub_snp_idx <- as.integer(
+  sub(
+    "^rs",
+    "",
+    rownames(dsub_pool@snp.info)
+  )
+)
+
+if (
+  length(dsub_snp_idx) != dsub_pool@nsnp ||
+  anyNA(dsub_snp_idx)
+) {
+  stop("Could not recover original SNP indexes from Dsub subset.")
+}
+
+cat(
+  "Dsub-informative SNPs retained: ",
+  format(length(dsub_snp_idx), big.mark = ","),
+  "\n"
+)
+
+# Restrict the 44 D. suzukii population units to exactly the same
+# SNP set before merging.
+dsuz_pool <- pooldata.subset(
+  pop_pool,
+  pool.index = idx_dsuz,
+  snp.index = dsub_snp_idx,
+  verbose = TRUE
+)
+
+if (dsuz_pool@nsnp != dsub_pool@nsnp) {
+  stop(
+    "Dsu/Dsub SNP counts remain inconsistent after harmonization: ",
+    dsuz_pool@nsnp,
+    " vs ",
+    dsub_pool@nsnp
+  )
+}
+
+if (!identical(
+  dsuz_pool@snp.info,
+  dsub_pool@snp.info
+)) {
+  stop("Dsu and Dsub SNP information differs after harmonization.")
+}
+
+cat(
+  "Harmonized SNP universe: ",
+  format(dsuz_pool@nsnp, big.mark = ","),
+  " SNPs\n\n"
+)
 
 # ============================================================
 # 4. MERGE HYBRID OBJECT
@@ -224,10 +299,12 @@ if (hybrid@npools != EXPECTED_TOTAL_UNITS) {
   )
 }
 
-if (hybrid@nsnp != EXPECTED_NSNP) {
+if (hybrid@nsnp != dsub_pool@nsnp) {
   stop(
-    "SNP universe changed after merge: ",
-    hybrid@nsnp
+    "Unexpected SNP count after harmonized merge: ",
+    hybrid@nsnp,
+    " expected ",
+    dsub_pool@nsnp
   )
 }
 
