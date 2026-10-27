@@ -37,7 +37,7 @@ suppressPackageStartupMessages({
 #
 # Expected:
 #   F3 = 58,800 configurations
-#   F4 = 676,900 configurations
+#   F4 = 690,900 configurations
 # ============================================================
 
 
@@ -307,7 +307,7 @@ if (expected_f3 != 58800) {
 }
 
 
-if (expected_f4 != 676900) {
+if (expected_f4 != 690900) {
 
   stop(
     "Internal F4-count check failed."
