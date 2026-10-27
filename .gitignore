@@ -1,0 +1,46 @@
+# Genomic data
+*.vcf
+*.vcf.gz
+*.vcf.gz.tbi
+*.bcf
+*.bcf.csi
+*.bam
+*.bai
+*.cram
+*.crai
+*.fastq
+*.fastq.gz
+*.fq
+*.fq.gz
+
+# Large R objects
+*.rds
+*.RData
+*.rda
+
+# Compressed/intermediate data
+*.gz
+*.bgz
+*.zip
+*.tar
+*.tar.gz
+
+# Cluster output
+*.out
+*.err
+slurm-*
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*~
+.DS_Store
+
+# R
+.Rhistory
+.Rproj.user/
+
+# Editors
+.vscode/
+.idea/
